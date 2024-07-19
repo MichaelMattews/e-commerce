@@ -1,4 +1,4 @@
-CREATE TABLE "dim_users" (
+CREATE TABLE "users" (
   "user_id" INTEGER PRIMARY KEY,
   "first_name" VARCHAR(20),
   "last_name" VARCHAR(20),
@@ -16,7 +16,7 @@ CREATE TABLE "dim_users" (
   "created_at" TIMESTAMP
 );
 
-CREATE TABLE "dim_products" (
+CREATE TABLE "products" (
   "product_id" INTEGER PRIMARY KEY,
   "cost" FLOAT,
   "category" VARCHAR(30),
@@ -30,25 +30,40 @@ CREATE TABLE "dim_products" (
   "created_at" TIMESTAMP
 );
 
-CREATE TABLE "dim_distribution_centers" (
+CREATE TABLE "distribution_centers" (
   "distribution_center_id" INTEGER PRIMARY KEY,
   "name" VARCHAR(50),
   "latitude" FLOAT,
   "longitude" FLOAT
 );
 
-CREATE TABLE "dimtime" (
-  "time_id" SERIAL PRIMARY KEY,
-  "date" DATE,
-  "year" INTEGER,
-  "quarter" INTEGER,
-  "month" INTEGER,
-  "day" INTEGER,
-  "day_of_week" VARCHAR(10),
-  "week_of_year" INTEGER
+
+CREATE TABLE dim_time (
+    time_id SERIAL PRIMARY KEY,
+    date DATE NOT NULL,
+    year INTEGER NOT NULL,
+    quarter INTEGER NOT NULL,
+    month INTEGER NOT NULL,
+    day INTEGER NOT NULL,
+    day_of_week VARCHAR(10) NOT NULL,
+    week_of_year INTEGER NOT NULL
 );
 
-CREATE TABLE "fact_order_items" (
+INSERT INTO dim_time (date, year, quarter, month, day, day_of_week, week_of_year)
+SELECT 
+    current_date + (n * interval '1 day') AS date,
+    EXTRACT(YEAR FROM current_date + (n * interval '1 day')) AS year,
+    EXTRACT(QUARTER FROM current_date + (n * interval '1 day')) AS quarter,
+    EXTRACT(MONTH FROM current_date + (n * interval '1 day')) AS month,
+    EXTRACT(DAY FROM current_date + (n * interval '1 day')) AS day,
+    TO_CHAR(current_date + (n * interval '1 day'), 'Day') AS day_of_week,
+    EXTRACT(WEEK FROM current_date + (n * interval '1 day')) AS week_of_year
+FROM 
+    generate_series(0, (date '2024-12-31' - date '2020-01-01')) n;
+
+
+
+CREATE TABLE "order_items" (
   "order_item_id" INTEGER PRIMARY KEY,
   "order_id" INTEGER,
   "user_id" INTEGER,
@@ -62,7 +77,7 @@ CREATE TABLE "fact_order_items" (
   "sale_price" FLOAT
 );
 
-CREATE TABLE "fact_orders" (
+CREATE TABLE "orders" (
   "order_id" INTEGER PRIMARY KEY,
   "user_id" INTEGER,
   "status" VARCHAR(30),
@@ -74,7 +89,7 @@ CREATE TABLE "fact_orders" (
   "total_sale_price" FLOAT
 );
 
-CREATE TABLE "fact_inventory" (
+CREATE TABLE "inventory" (
   "inventory_item_id" INTEGER PRIMARY KEY,
   "product_id" INTEGER,
   "created_at" TIMESTAMP,
